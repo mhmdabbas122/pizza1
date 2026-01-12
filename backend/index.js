@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static files from frontend assets
-app.use('/assets', express.static(path.join(__dirname, '../frontend/mhamad-react/src/assets')));
+app.use('/assets', express.static(path.join(__dirname, '../frontend/frontend/src/assets')));
 
 const PORT = 5001;
 
@@ -40,7 +40,10 @@ app.get("/", (req, res) => {
 // ✅ GET all products
 app.get("/api/products", async (req, res) => {
   try {
-    res.json(staticProducts);
+    const connection = await pool.getConnection();
+    const [rows] = await connection.query("SELECT * FROM products");
+    connection.release();
+    res.json(rows);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -49,9 +52,11 @@ app.get("/api/products", async (req, res) => {
 // ✅ GET product by id
 app.get("/api/products/:id", async (req, res) => {
   try {
-    const product = staticProducts.find(p => p.id == req.params.id);
-    if (!product) return res.status(404).json({ error: "Not found" });
-    res.json(product);
+    const connection = await pool.getConnection();
+    const [rows] = await connection.query("SELECT * FROM products WHERE id = ?", [req.params.id]);
+    connection.release();
+    if (rows.length === 0) return res.status(404).json({ error: "Not found" });
+    res.json(rows[0]);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -64,15 +69,21 @@ app.post("/api/products", async (req, res) => {
     if (!name || price == null)
       return res.status(400).json({ error: "name and price are required" });
 
-    // Return success but don't add
+    const connection = await pool.getConnection();
+    const [result] = await connection.query("INSERT INTO products (name, price, image, category) VALUES (?, ?, ?, ?)", 
+      [name, price, image || "", category || "pizza"]);
+    connection.release();
+    
+    console.log("✅ Product added with ID:", result.insertId);
     res.status(201).json({
-      id: Date.now(),
+      id: result.insertId,
       name,
-      price,
+      price: parseFloat(price),
       image: image || "",
       category: category || "pizza",
     });
   } catch (err) {
+    console.error("❌ Error adding product:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -80,10 +91,13 @@ app.post("/api/products", async (req, res) => {
 // ✅ UPDATE product
 app.put("/api/products/:id", async (req, res) => {
   try {
-    const product = staticProducts.find(p => p.id == req.params.id);
-    if (!product) return res.status(404).json({ error: "Not found" });
-
-    // Return success but don't update
+    const { name, price, image, category } = req.body;
+    const connection = await pool.getConnection();
+    const [result] = await connection.query("UPDATE products SET name = ?, price = ?, image = ?, category = ? WHERE id = ?", 
+      [name, price, image, category, req.params.id]);
+    connection.release();
+    
+    if (result.affectedRows === 0) return res.status(404).json({ error: "Not found" });
     res.json({ message: "Updated ✅" });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -93,7 +107,11 @@ app.put("/api/products/:id", async (req, res) => {
 // ✅ DELETE product
 app.delete("/api/products/:id", async (req, res) => {
   try {
-    // Return success for any id (read-only)
+    const connection = await pool.getConnection();
+    const [result] = await connection.query("DELETE FROM products WHERE id = ?", [req.params.id]);
+    connection.release();
+    
+    if (result.affectedRows === 0) return res.status(404).json({ error: "Not found" });
     res.json({ message: "Deleted ✅" });
   } catch (err) {
     res.status(500).json({ error: err.message });
