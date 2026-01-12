@@ -8,7 +8,7 @@ const New = () => {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const res = await fetch("http://192.168.0.109:5001/api/users");
+        const res = await fetch((process.env.REACT_APP_API_URL || "http://localhost:5001") + "/api/users");
         if (!res.ok) throw new Error("Failed to load users from API");
         const data = await res.json();
         setUsers(Array.isArray(data) ? data : []);

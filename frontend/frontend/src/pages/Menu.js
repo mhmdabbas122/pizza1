@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import MenuItem from "../components/MenuItem";
 import "../styles/Menu.css";
 
-const API = "http://192.168.0.109:5001/api/products";
+const API = process.env.REACT_APP_API_URL || "http://localhost:5001/api/products";
 
 function Menu() {
   const [products, setProducts] = useState([]);

@@ -40,10 +40,16 @@ app.get("/", (req, res) => {
 // ✅ GET all products
 app.get("/api/products", async (req, res) => {
   try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.query("SELECT * FROM products");
-    connection.release();
-    res.json(rows);
+    try {
+      const connection = await pool.getConnection();
+      const [rows] = await connection.query("SELECT * FROM products");
+      connection.release();
+      res.json(rows);
+    } catch (dbErr) {
+      // Fallback to static products if database is not available
+      console.log("Database error, using static products:", dbErr.message);
+      res.json(staticProducts);
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
