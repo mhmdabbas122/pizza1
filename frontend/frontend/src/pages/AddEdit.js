@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-const API = "http://localhost:5001/api/products";
+const API = "http://192.168.0.109:5001/api/products";
 
 export default function AddEditProduct() {
   const { id } = useParams(); // موجود فقط في edit

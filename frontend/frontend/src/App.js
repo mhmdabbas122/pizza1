@@ -20,7 +20,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/menu" element={<Menu />} />
             <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
+            -hfiw10hji0f=
             <Route path="/" element={<Menu />} />
             <Route path="/table" element={<Table />} />
         <Route path="/admin/add" element={<AddEditProduct />} />
